@@ -1,9 +1,11 @@
-const { Client } = require('pg') // imports the pg module
+const { Pool } = require('pg')
 
-const client = new Client({
-  connectionString: process.env.DATABASE_URL || 'postgres://localhost:5432/juicebox-dev',
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : undefined,
-});
+const client = new Pool({
+  user: 'postgres',
+  database: 'juicebox',
+  password: '0114',
+  port: 5432
+})
 
 /**
  * USER Methods
@@ -17,8 +19,8 @@ async function createUser({
 }) {
   try {
     const { rows: [ user ] } = await client.query(`
-      INSERT INTO users(username, password, name) 
-      VALUES($1, $2, $3) 
+      INSERT INTO users(username, password, name, location) 
+      VALUES($1, $2, $3, $4) 
       ON CONFLICT (username) DO NOTHING 
       RETURNING *;
     `, [username, password, name, location]);
@@ -354,6 +356,28 @@ async function getAllTags() {
   }
 }
 
+async function deletePost(postId) {
+  try {
+    await client.query(
+      `
+      DELETE FROM post_tags
+      WHERE "postId"-$1
+      `,
+      [postId]
+    )
+
+    await client.query(
+      `
+      DELETE FROM posts
+      WHERE id=$1;
+      `,
+      [postId]
+    )
+  } catch (error) {
+    throw error
+  }
+}
+
 module.exports = {  
   client,
   createUser,
@@ -370,5 +394,6 @@ module.exports = {
   createTags,
   getAllTags,
   createPostTag,
-  addTagsToPost
+  addTagsToPost,
+  deletePost
 }

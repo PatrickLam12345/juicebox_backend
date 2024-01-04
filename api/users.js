@@ -1,5 +1,6 @@
 const express = require('express');
 const usersRouter = express.Router();
+const bcrypt = require('bcrypt');
 
 const { 
   createUser,
@@ -64,6 +65,7 @@ usersRouter.post('/register', async (req, res, next) => {
 
   try {
     const _user = await getUserByUsername(username);
+    const hashedPassword = bcrypt.hashSync(password, 10)
   
     if (_user) {
       next({
@@ -74,7 +76,7 @@ usersRouter.post('/register', async (req, res, next) => {
 
     const user = await createUser({
       username,
-      password,
+      hashedPassword,
       name,
       location,
     });

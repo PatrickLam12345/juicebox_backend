@@ -98,7 +98,22 @@ postsRouter.patch('/:postId', requireUser, async (req, res, next) => {
 });
 
 postsRouter.delete('/:postId', requireUser, async (req, res, next) => {
-  res.send({ message: 'under construction' });
+  const { postId } = req.params;
+
+  try {
+    const deletedPost = await deletePost(postId);
+
+    if (deletedPost) {
+      res.send({ deletedPost: deletedPost })
+    } else {
+      next({
+        name: 'Error',
+        message: 'Failed to delete Post.'
+      })
+    }
+  } catch ({ name, message }) {
+    next({ name, message });
+  }
 });
 
 module.exports = postsRouter;
